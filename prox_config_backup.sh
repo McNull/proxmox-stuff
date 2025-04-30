@@ -41,6 +41,9 @@ _bdir=${BACK_DIR:-$DEFAULT_BACK_DIR}
 # Check backup directory exists
 if [[ ! -d "${_bdir}" ]]; then
     echo "Aborting because backup target does not exists"
+    echo "Please create the backup target directory or set BACK_DIR to a valid path"
+    echo "Example: export BACK_DIR=$_bdir"
+    echo "or run the script with BACK_DIR=$_bdir ./prox_config_backup.sh"
     exit 1
 fi
 
