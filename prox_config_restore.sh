@@ -58,9 +58,28 @@ if [ "$COMMENT_FSTAB" = true ]; then
     fi
 fi
 
+echo "Stopping all running VMs..."
+for vmid in $(qm list | awk 'NR>1 && $3=="running" {print $1}'); do
+    echo "Stopping VM $vmid..."
+    qm stop $vmid || echo "Failed to stop VM $vmid, continuing..."
+done
+
+echo "Stopping all running LXC containers..."
+for ctid in $(pct list | awk 'NR>1 && $3=="running" {print $1}'); do
+    echo "Stopping container $ctid..."
+    pct stop $ctid || echo "Failed to stop container $ctid, continuing..."
+done
+
+# Add a small delay to allow VMs/CTs to stop
+echo "Waiting for VMs/CTs to stop..."
+sleep 15
+
 echo "Stopping services..."
 
-for i in pve-cluster pvedaemon vz qemu-server; do systemctl stop $i; done || true
+for i in pve-cluster pvedaemon vz qemu-server; do
+    echo "Stopping service: $i"
+    systemctl stop $i
+done || true
 
 if [ "$COMMENT_FSTAB" = true ] && [[ -f /tmp/fstab_RESTORED ]]; then
     mv /tmp/fstab_RESTORED /etc/fstab_RESTORED
