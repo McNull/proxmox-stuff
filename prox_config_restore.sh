@@ -42,21 +42,7 @@ case "$CHOICE" in
     ;;
 esac
 
-FOLDER_1="./$1_1"
-FOLDER_2="./$1_2"
-
-mkdir "$FOLDER_1"
-mkdir "$FOLDER_2"
-
-tar -zxvf $1 -C "$FOLDER_1"
-find "$FOLDER_1" -name "*tar" -exec tar xvf '{}' -C "$FOLDER_2" \;
-
-if [ "$COMMENT_FSTAB" = true ]; then
-    echo "Processing /etc/fstab"
-    if [[ -f "$FOLDER_2/etc/fstab" ]]; then
-        sed 's/^/# /' "$FOLDER_2/etc/fstab" >/tmp/fstab_RESTORED
-    fi
-fi
+# --- Stop all VMs and containers ---
 
 shutdown_error=0 # Flag to track shutdown errors
 
@@ -91,13 +77,35 @@ for i in pve-cluster pvedaemon vz qemu-server; do
     systemctl stop $i
 done || true
 
-if [ "$COMMENT_FSTAB" = true ] && [[ -f /tmp/fstab_RESTORED ]]; then
-    mv /tmp/fstab_RESTORED /etc/fstab_RESTORED
-else
-    find "$FOLDER_2" -type f ! -name 'fstab_RESTORED' -exec cp -a '{}' / \;
+# --- End of stop all VMs and containers ---
+
+FOLDER_1="./$1_1"
+FOLDER_2="./$1_2"
+
+mkdir "$FOLDER_1"
+mkdir "$FOLDER_2"
+
+tar -zxvf $1 -C "$FOLDER_1"
+find "$FOLDER_1" -name "*tar" -exec tar xvf '{}' -C "$FOLDER_2" \;
+
+if [ "$COMMENT_FSTAB" = true ]; then
+    echo "Processing /etc/fstab"
+    if [[ -f "$FOLDER_2/etc/fstab" ]]; then
+        sed 's/^/# /' "$FOLDER_2/etc/fstab" >/tmp/fstab_RESTORED
+    fi
 fi
 
-cp -avr "$FOLDER_2/" /
+if [ "$COMMENT_FSTAB" = true ] && [[ -f /tmp/fstab_RESTORED ]]; then
+    mv /tmp/fstab_RESTORED /etc/fstab_RESTORED
+    # Copy everything *except* fstab if we handled it specially
+    find "$FOLDER_2" -mindepth 1 -maxdepth 1 ! -path "$FOLDER_2/etc" -exec cp -a '{}' / \;
+    find "$FOLDER_2/etc" -type f ! -name 'fstab' -exec cp -a '{}' /etc/ \;
+    find "$FOLDER_2/etc" -mindepth 1 -maxdepth 1 -type d -exec cp -a '{}' /etc/ \;
+
+else
+    # Original copy logic if fstab wasn't handled specially
+    cp -avr "$FOLDER_2/" /
+fi
 
 rm -r "$FOLDER_1" "$FOLDER_2" || true
 
