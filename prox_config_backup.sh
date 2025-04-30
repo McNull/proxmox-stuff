@@ -166,6 +166,9 @@ function compressandarchive {
     # archive the copied system files
     tar -cvzPf "$_filename_final" $_tdir/*.{tar,list,txt}
 
+    # Display archive size
+    echo "Archive size: $(du -h "$_filename_final" | cut -f1)"
+
     # copy config archive to backup folder
     # this may be replaced by scp command to place in remote location
     cp $_filename_final $_bdir/
