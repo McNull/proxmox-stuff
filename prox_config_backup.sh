@@ -1,7 +1,7 @@
 #!/bin/bash
 # Version	      0.3.0
 # Date		      19.04.2024
-# Author 	      DerDanilo 
+# Author 	      DerDanilo
 # Contributors    aboutte, xmirakulix, bootsie123, phidauex
 
 ###########################
@@ -13,7 +13,7 @@
 #   example: export BACK_DIR="/mnt/pve/media/backup"
 #   or
 #   example: BACK_DIR="." ./prox_config_backup.sh
-DEFAULT_BACK_DIR="/mnt/pve/media/backup"
+DEFAULT_BACK_DIR="/mnt/pve/backup-smb/prox-config"
 
 # number of backups to keep before overriding the oldest one
 MAX_BACKUPS=5
@@ -39,8 +39,9 @@ set -e
 _bdir=${BACK_DIR:-$DEFAULT_BACK_DIR}
 
 # Check backup directory exists
-if [[ ! -d "${_bdir}" ]] ; then
-    echo "Aborting because backup target does not exists" ; exit 1
+if [[ ! -d "${_bdir}" ]]; then
+    echo "Aborting because backup target does not exists"
+    exit 1
 fi
 
 # temporary storage directory
@@ -81,7 +82,7 @@ _filename_final="$_tdir/pve_"$_HOSTNAME"_"$_now".tar.gz"
 ##########
 
 function description {
-# Check to see if we are in an interactive terminal, if not, skip the description
+    # Check to see if we are in an interactive terminal, if not, skip the description
     if [[ -t 0 && -t 1 ]]; then
         clear
         files_to_be_saved="/etc/*, /var/lib/pve-cluster/*, /root/*, /var/spool/cron/*, /usr/share/kvm/*.vbios"
@@ -116,16 +117,17 @@ EOF
 }
 
 function are-we-root-abort-if-not {
-    if [[ ${EUID} -ne 0 ]] ; then
-      echo "Aborting because you are not root" ; exit 1
+    if [[ ${EUID} -ne 0 ]]; then
+        echo "Aborting because you are not root"
+        exit 1
     fi
 }
 
 function check-num-backups {
     if [[ $(ls ${_bdir}/*_${_HOSTNAME}_*.tar.gz | wc -l) -ge $MAX_BACKUPS ]]; then
-      local oldbackups="$(ls ${_bdir}/*_${_HOSTNAME}_*.tar.gz -t | tail -n +$MAX_BACKUPS)"
-      echo "${oldbackups}"
-      rm ${oldbackups}
+        local oldbackups="$(ls ${_bdir}/*_${_HOSTNAME}_*.tar.gz -t | tail -n +$MAX_BACKUPS)"
+        echo "${oldbackups}"
+        rm ${oldbackups}
     fi
 }
 
@@ -142,9 +144,9 @@ function copyfilesystem {
 
     if [ "$(ls -A /usr/local/bin 2>/dev/null)" ]; then tar --warning='no-file-ignored' -cvPf "$_filename8" /usr/local/bin/.; fi
 
-    if [ "$(ls /usr/share/kvm/*.vbios 2>/dev/null)" != "" ] ; then
-	echo backing up custom video bios...
-	tar --warning='no-file-ignored' -cvPf "$_filename5" /usr/share/kvm/*.vbios
+    if [ "$(ls /usr/share/kvm/*.vbios 2>/dev/null)" != "" ]; then
+        echo backing up custom video bios...
+        tar --warning='no-file-ignored' -cvPf "$_filename5" /usr/share/kvm/*.vbios
     fi
     # copy installed packages list
     echo "Copying installed packages list from APT"
@@ -166,14 +168,14 @@ function compressandarchive {
 
 function stopservices {
     # stop host services
-    for i in pve-cluster pvedaemon vz qemu-server; do systemctl stop $i ; done
+    for i in pve-cluster pvedaemon vz qemu-server; do systemctl stop $i; done
     # give them a moment to finish
     sleep 10s
 }
 
 function startservices {
     # restart services
-    for i in qemu-server vz pvedaemon pve-cluster; do systemctl start $i ; done
+    for i in qemu-server vz pvedaemon pve-cluster; do systemctl start $i; done
     # Make sure that all VMs + LXC containers are running
     qm startall
 }
