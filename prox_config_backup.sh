@@ -172,6 +172,10 @@ function compressandarchive {
     # copy config archive to backup folder
     # this may be replaced by scp command to place in remote location
     cp $_filename_final $_bdir/
+
+    # Create/update latest symlink
+    echo "Updating latest symlink"
+    ln -snf "$_bdir/$(basename "$_filename_final")" "$_bdir/latest"
 }
 
 function stopservices {
