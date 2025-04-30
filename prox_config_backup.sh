@@ -8,12 +8,14 @@
 # Configuration Variables #
 ###########################
 
+SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
+
 # Permanent backups directory
 # Default value can be overridden by setting environment variable before running prox_config_backup.sh
 #   example: export BACK_DIR="/mnt/pve/media/backup"
 #   or
 #   example: BACK_DIR="." ./prox_config_backup.sh
-DEFAULT_BACK_DIR="/mnt/pve/backup-smb/prox-config"
+DEFAULT_BACK_DIR="${SCRIPT_DIR}/backups"
 
 # number of backups to keep before overriding the oldest one
 MAX_BACKUPS=5
