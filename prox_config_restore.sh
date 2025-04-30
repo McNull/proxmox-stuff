@@ -61,13 +61,13 @@ fi
 echo "Stopping all running VMs..."
 for vmid in $(qm list | awk 'NR>1 && $3=="running" {print $1}'); do
     echo "Stopping VM $vmid..."
-    qm stop $vmid || echo "Failed to stop VM $vmid, continuing..."
+    qm shutdown $vmid || echo "Failed to stop VM $vmid, continuing..."
 done
 
 echo "Stopping all running LXC containers..."
 for ctid in $(pct list | awk 'NR>1 && $3=="running" {print $1}'); do
     echo "Stopping container $ctid..."
-    pct stop $ctid || echo "Failed to stop container $ctid, continuing..."
+    pct shutdown $ctid || echo "Failed to stop container $ctid, continuing..."
 done
 
 # Add a small delay to allow VMs/CTs to stop
